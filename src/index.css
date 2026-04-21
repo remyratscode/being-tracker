@@ -1,0 +1,238 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-bg: #111113;
+  --color-surface: #1c1c1f;
+  --color-surface-raised: #26262a;
+  --color-border: #2e2e34;
+  --color-text: #e4e4e7;
+  --color-text-muted: #71717a;
+  --color-accent: #3b82f6;
+  --color-on: #22c55e;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --radius: 8px;
+  --header-height: 56px;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  height: 100%;
+}
+
+/* ── App layout ──────────────────────────────── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: var(--header-height);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.app-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--color-text);
+}
+
+.app-main {
+  flex: 1;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* ── Date nav ────────────────────────────────── */
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.date-nav-label {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  min-width: 220px;
+  text-align: center;
+}
+
+.date-nav-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.date-nav-btn:hover:not(:disabled) {
+  color: var(--color-text);
+  border-color: var(--color-text-muted);
+}
+
+.date-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ── Log section ─────────────────────────────── */
+
+.log-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 2px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.section-fields {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Field row ───────────────────────────────── */
+
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--color-border);
+  gap: 16px;
+}
+
+.field:last-child {
+  border-bottom: none;
+}
+
+.field-label {
+  font-size: 14px;
+  color: var(--color-text);
+  user-select: none;
+}
+
+/* ── Toggle ──────────────────────────────────── */
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--color-border);
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+.toggle-switch input:checked ~ .toggle-track {
+  background: var(--color-on);
+}
+
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-switch input:checked ~ .toggle-track::after {
+  transform: translateX(16px);
+}
+
+/* ── Text / number input ─────────────────────── */
+
+.field-input {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 6px 10px;
+  width: 180px;
+  outline: none;
+  transition: border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.field-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.field-input:focus {
+  border-color: var(--color-accent);
+}
+
+input[type='time'].field-input {
+  width: 120px;
+  color-scheme: dark;
+}
+
+input[type='number'].field-input {
+  width: 80px;
+}
