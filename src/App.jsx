@@ -1,82 +1,54 @@
 import { useState, useMemo, useRef } from 'react'
 import DateNav, { todayStr } from './components/DateNav'
+import WeekStrip from './components/WeekStrip'
+import ProgressRing from './components/ProgressRing'
 import ActivityCard from './components/ActivityCard'
 import ActivityModal from './components/ActivityModal'
 import TagsModal from './components/TagsModal'
 import HistoryModal from './components/HistoryModal'
+import HelpPanel from './components/HelpPanel'
 import { useActivities } from './hooks/useActivities'
 import { useEntries } from './hooks/useEntries'
 import { useTags } from './hooks/useTags'
 import { useStats } from './hooks/useStats'
-
-function hasValue(field, value) {
-  if (value === undefined || value === null) return false
-  switch (field.type) {
-    case 'toggle': return value === true
-    case 'time_range': return !!(value?.start && value?.end)
-    case 'quantity': return value?.amount !== undefined && value?.amount !== ''
-    default: return value !== ''
-  }
-}
-
-function getActual(field, value) {
-  switch (field.type) {
-    case 'number':   return Number(value)
-    case 'duration': return Number(value)
-    case 'quantity': return Number(value?.amount)
-    case 'time_range': {
-      if (!value?.start || !value?.end) return null
-      const [sh, sm] = value.start.split(':').map(Number)
-      const [eh, em] = value.end.split(':').map(Number)
-      let mins = eh * 60 + em - (sh * 60 + sm)
-      if (mins < 0) mins += 1440
-      return mins / 60
-    }
-    default: return null
-  }
-}
-
-function fieldIsDone(field, value) {
-  const goal = field.config?.goal
-  if (goal?.target !== undefined && goal?.target !== '') {
-    const target = Number(goal.target)
-    const op = goal.operator ?? 'gte'
-    const actual = getActual(field, value)
-    if (actual === null || isNaN(actual)) return false
-    return op === 'gte' ? actual >= target
-         : op === 'lte' ? actual <= target
-         : actual === target
-  }
-  return hasValue(field, value)
-}
-
-function getCompletionStatus(activity, entry) {
-  if (!activity.fields.length) return 'empty'
-  const values = entry?.values ?? {}
-  const done = activity.fields.filter(f => fieldIsDone(f, values[f.id]))
-  if (done.length === 0) return 'empty'
-  if (done.length === activity.fields.length) return 'complete'
-  return 'partial'
-}
+import { getCompletionStatus } from './utils/completion'
+import { exportData, importData } from './utils/backup'
 
 export default function App() {
   const [date, setDate] = useState(todayStr)
-  const { activities, addActivity, updateActivity, deleteActivity, renameTagAcrossActivities, reorderActivity } = useActivities()
+  const {
+    activities,
+    addActivity, updateActivity, deleteActivity,
+    archiveActivity, unarchiveActivity,
+    renameTagAcrossActivities, reorderActivity,
+  } = useActivities()
   const { getEntry, setFieldValue } = useEntries(date)
-  const { tags, addTag, renameTag, deleteTag, moveTag } = useTags(activities)
-
-  const stats = useStats(activities, date)
+  const { tags, addTag, renameTag, deleteTag, moveTag, updateTagColor } = useTags(activities)
 
   const [modal, setModal] = useState(null)
   const [tagsOpen, setTagsOpen] = useState(false)
   const [historyActivity, setHistoryActivity] = useState(null)
+  const [helpOpen, setHelpOpen] = useState(false)
+  const [filterTag, setFilterTag] = useState(null)
+  const [archivedOpen, setArchivedOpen] = useState(false)
 
   const draggingId = useRef(null)
   const [dragOverId, setDragOverId] = useState(null)
+  const importRef = useRef(null)
+
+  const activeActivities = useMemo(() => activities.filter(a => !a.archived), [activities])
+  const archivedActivities = useMemo(() => activities.filter(a => a.archived), [activities])
+
+  const stats = useStats(activeActivities, date)
 
   const editingActivity = typeof modal === 'string' && modal !== 'create'
     ? activities.find(a => a.id === modal)
     : null
+
+  const tagColors = useMemo(() =>
+    Object.fromEntries(tags.map(t => [t.name, t.color])),
+    [tags]
+  )
 
   function handleSave(activityData) {
     if (editingActivity) updateActivity(activityData.id, activityData)
@@ -89,19 +61,60 @@ export default function App() {
     renameTagAcrossActivities(oldName, newName)
   }
 
+  // Group active activities by first tag, ordered by registry
   const groups = useMemo(() => {
-    const firstTags = activities.map(a => a.tags[0]).filter(Boolean)
-    const orderedTags = [
-      ...tags.filter(t => firstTags.includes(t)),
-      ...[...new Set(firstTags.filter(t => !tags.includes(t)))],
+    const firstTags = activeActivities.map(a => a.tags[0]).filter(Boolean)
+    const orderedTagNames = [
+      ...tags.filter(t => firstTags.includes(t.name)).map(t => t.name),
+      ...[...new Set(firstTags.filter(t => !tags.some(r => r.name === t)))],
     ]
-    const result = orderedTags
-      .map(tag => ({ tag, items: activities.filter(a => a.tags[0] === tag) }))
+    const result = orderedTagNames
+      .map(tagName => ({ tag: tagName, items: activeActivities.filter(a => a.tags[0] === tagName) }))
       .filter(g => g.items.length > 0)
-    const untagged = activities.filter(a => !a.tags.length)
+    const untagged = activeActivities.filter(a => !a.tags.length)
     if (untagged.length > 0) result.push({ tag: null, items: untagged })
     return result
-  }, [activities, tags])
+  }, [activeActivities, tags])
+
+  const visibleGroups = filterTag
+    ? groups.filter(g => g.tag === filterTag)
+    : groups
+
+  // Progress ring data — reactive to entry changes via getEntry
+  const ringData = useMemo(() => {
+    return groups.map(({ tag, items }) => {
+      const color = tagColors[tag] ?? '#52525b'
+      const done = items.filter(a =>
+        getCompletionStatus(a, getEntry(a.id)) === 'complete'
+      ).length
+      return { tag: tag ?? 'Uncategorized', color, total: items.length, done }
+    })
+  }, [groups, tagColors, getEntry])
+
+  const totalDone = ringData.reduce((s, g) => s + g.done, 0)
+  const totalAll  = ringData.reduce((s, g) => s + g.total, 0)
+
+  // Changes when any entry changes — triggers WeekStrip today dot refresh
+  const todayEntryCount = useMemo(() =>
+    activeActivities.reduce((n, a) => n + (getEntry(a.id) ? 1 : 0), 0),
+    [activeActivities, getEntry]
+  )
+
+  async function handleImport(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!window.confirm('This will replace all your current data. Continue?')) {
+      e.target.value = ''
+      return
+    }
+    try {
+      await importData(file)
+      window.location.reload()
+    } catch {
+      alert('Could not read backup — make sure it is a valid Life Log export.')
+      e.target.value = ''
+    }
+  }
 
   return (
     <div className="app">
@@ -110,16 +123,75 @@ export default function App() {
           <span className="app-name">Life Log</span>
           <button className="add-activity-btn" onClick={() => setModal('create')} title="New activity">+</button>
           <button className="tags-manage-btn" onClick={() => setTagsOpen(true)} title="Manage tags">#</button>
+          <button className="help-btn" onClick={() => setHelpOpen(true)} title="Help">?</button>
+          <button className="header-icon-btn" onClick={exportData} title="Export backup">↓</button>
+          <button className="header-icon-btn" onClick={() => importRef.current.click()} title="Import backup">↑</button>
+          <input
+            ref={importRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={handleImport}
+          />
         </div>
         <DateNav date={date} onChange={setDate} />
       </header>
 
+      <div className="day-header">
+        <div className="day-header-inner">
+          <WeekStrip
+            currentDate={date}
+            onDateChange={setDate}
+            todayEntryCount={todayEntryCount}
+          />
+          <ProgressRing
+            groups={ringData}
+            totalDone={totalDone}
+            totalAll={totalAll}
+          />
+        </div>
+      </div>
+
       <main className="app-main">
-        {groups.map(({ tag, items }) => (
+
+        {/* Tag filter chips */}
+        {groups.length > 1 && (
+          <div className="tag-filter-bar">
+            {groups.map(({ tag }) => {
+              const color = tagColors[tag] ?? '#52525b'
+              const active = filterTag === tag
+              return (
+                <button
+                  key={tag ?? '__untagged'}
+                  className={`tag-filter-chip ${active ? 'tag-filter-chip--active' : ''}`}
+                  style={active
+                    ? { background: `${color}22`, color, borderColor: color }
+                    : { color, borderColor: `${color}44` }
+                  }
+                  onClick={() => setFilterTag(prev => prev === tag ? null : tag)}
+                >
+                  {tag ?? 'Uncategorized'}
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {visibleGroups.map(({ tag, items }) => (
           <div key={tag ?? '__untagged'} className="tag-group">
             <div className="tag-group-header">
-              <span className="tag-group-label">{tag ?? 'Uncategorized'}</span>
+              <span
+                className="tag-group-label"
+                style={{ color: tagColors[tag] ?? 'var(--color-text-muted)' }}
+              >
+                {tag ?? 'Uncategorized'}
+              </span>
+              <div
+                className="tag-group-line"
+                style={{ background: tagColors[tag] ?? 'var(--color-border)' }}
+              />
             </div>
+
             {items.map(activity => {
               const entry = getEntry(activity.id)
               return (
@@ -130,6 +202,7 @@ export default function App() {
                   completionStatus={getCompletionStatus(activity, entry)}
                   isDragOver={dragOverId === activity.id}
                   stats={stats[activity.id]}
+                  tagColors={tagColors}
                   onFieldChange={(fieldId, value) => setFieldValue(activity.id, fieldId, value)}
                   onEdit={() => setModal(activity.id)}
                   onHistory={() => setHistoryActivity(activity)}
@@ -137,9 +210,8 @@ export default function App() {
                   onDragOver={e => { e.preventDefault(); if (draggingId.current !== activity.id) setDragOverId(activity.id) }}
                   onDragLeave={() => setDragOverId(null)}
                   onDrop={() => {
-                    if (draggingId.current && draggingId.current !== activity.id) {
+                    if (draggingId.current && draggingId.current !== activity.id)
                       reorderActivity(draggingId.current, activity.id)
-                    }
                     draggingId.current = null
                     setDragOverId(null)
                   }}
@@ -150,13 +222,42 @@ export default function App() {
           </div>
         ))}
 
-        {activities.length === 0 && (
+        {activeActivities.length === 0 && (
           <p className="empty-state">No activities yet. Create one to get started.</p>
         )}
 
         <button className="add-activity-card" onClick={() => setModal('create')}>
           + New activity
         </button>
+
+        {/* Archived section */}
+        {archivedActivities.length > 0 && (
+          <div className="archived-section">
+            <button
+              className="archived-toggle"
+              onClick={() => setArchivedOpen(p => !p)}
+            >
+              <span>Archived ({archivedActivities.length})</span>
+              <span className="archived-toggle-arrow">{archivedOpen ? '▴' : '▾'}</span>
+            </button>
+            {archivedOpen && (
+              <div className="archived-list">
+                {archivedActivities.map(a => (
+                  <div key={a.id} className="archived-item">
+                    <span className="archived-item-name">{a.name}</span>
+                    <button
+                      className="archived-restore-btn"
+                      onClick={() => unarchiveActivity(a.id)}
+                    >
+                      Restore
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
       </main>
 
       {modal && (
@@ -165,6 +266,7 @@ export default function App() {
           allTags={tags}
           onSave={handleSave}
           onDelete={deleteActivity}
+          onArchive={archiveActivity}
           onClose={() => setModal(null)}
         />
       )}
@@ -176,6 +278,7 @@ export default function App() {
           onRename={handleRenameTag}
           onDelete={deleteTag}
           onMove={moveTag}
+          onUpdateColor={updateTagColor}
           onClose={() => setTagsOpen(false)}
         />
       )}
@@ -186,6 +289,8 @@ export default function App() {
           onClose={() => setHistoryActivity(null)}
         />
       )}
+
+      <HelpPanel open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   )
 }

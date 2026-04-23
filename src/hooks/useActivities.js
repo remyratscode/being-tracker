@@ -55,5 +55,13 @@ export function useActivities() {
     })
   }, [persist])
 
-  return { activities, addActivity, updateActivity, deleteActivity, renameTagAcrossActivities, reorderActivity }
+  const archiveActivity = useCallback((id) => {
+    persist(prev => prev.map(a => a.id === id ? { ...a, archived: true } : a))
+  }, [persist])
+
+  const unarchiveActivity = useCallback((id) => {
+    persist(prev => prev.map(a => a.id === id ? { ...a, archived: false } : a))
+  }, [persist])
+
+  return { activities, addActivity, updateActivity, deleteActivity, renameTagAcrossActivities, reorderActivity, archiveActivity, unarchiveActivity }
 }

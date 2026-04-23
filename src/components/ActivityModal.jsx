@@ -9,13 +9,15 @@ const FIELD_TYPES = [
   { value: 'duration',   label: 'Duration (min)' },
   { value: 'quantity',   label: 'Quantity + unit' },
   { value: 'select',     label: 'Select' },
+  { value: 'rating',     label: 'Rating (1–5)' },
+  { value: 'checklist',  label: 'Checklist' },
 ]
 
 function newField() {
   return { id: crypto.randomUUID(), label: '', type: 'toggle', config: {} }
 }
 
-export default function ActivityModal({ activity, allTags, onSave, onDelete, onClose }) {
+export default function ActivityModal({ activity, allTags, onSave, onDelete, onArchive, onClose }) {
   const isEdit = !!activity
   const nameRef = useRef(null)
 
@@ -42,9 +44,11 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onC
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  // Tag input
-  const suggestions = allTags
-    .filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase()))
+  // Tag input — allTags is now [{name, color}]
+  const tagColorMap = Object.fromEntries((allTags ?? []).map(t => [t.name, t.color]))
+
+  const suggestions = (allTags ?? [])
+    .filter(t => !tags.includes(t.name) && t.name.toLowerCase().includes(tagInput.toLowerCase()))
 
   const showSuggestions = (tagFocused || tagInput.trim() !== '') && suggestions.length > 0
 
@@ -147,12 +151,15 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onC
           <div className="form-group">
             <label className="form-label">Tags</label>
             <div className="tag-input-wrap" onClick={() => document.getElementById('tag-input').focus()}>
-              {tags.map(tag => (
-                <span key={tag} className="tag-pill">
-                  {tag}
-                  <button className="tag-pill-remove" onClick={() => setTags(t => t.filter(x => x !== tag))}>×</button>
-                </span>
-              ))}
+              {tags.map(tag => {
+                const c = tagColorMap[tag] ?? '#52525b'
+                return (
+                  <span key={tag} className="tag-pill" style={{ background: `${c}22`, color: c, border: `1px solid ${c}44` }}>
+                    {tag}
+                    <button className="tag-pill-remove" style={{ color: c }} onClick={() => setTags(t => t.filter(x => x !== tag))}>×</button>
+                  </span>
+                )
+              })}
               <input
                 id="tag-input"
                 className="tag-text-input"
@@ -167,7 +174,12 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onC
             {showSuggestions && (
               <div className="tag-suggestions">
                 {suggestions.slice(0, 8).map(t => (
-                  <button key={t} className="tag-suggestion-btn" onMouseDown={() => addTag(t)}>{t}</button>
+                  <button
+                    key={t.name}
+                    className="tag-suggestion-btn"
+                    style={{ borderColor: `${t.color}55`, color: t.color }}
+                    onMouseDown={() => addTag(t.name)}
+                  >{t.name}</button>
                 ))}
               </div>
             )}
@@ -222,6 +234,18 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onC
                       placeholder="Units: g, kg, ml, capsules"
                       onChange={e =>
                         setFieldConfig(field.id, 'units',
+                          e.target.value.split(',').map(s => s.trim()).filter(Boolean))
+                      }
+                    />
+                  )}
+                  {field.type === 'checklist' && (
+                    <input
+                      className="form-input form-input--config"
+                      type="text"
+                      value={field.config.items?.join(', ') ?? ''}
+                      placeholder="Items: Vitamins, Fish oil, Creatine"
+                      onChange={e =>
+                        setFieldConfig(field.id, 'items',
                           e.target.value.split(',').map(s => s.trim()).filter(Boolean))
                       }
                     />
@@ -287,13 +311,21 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onC
         </div>
 
         <div className="modal-footer">
-          <div>
+          <div className="modal-footer-left">
             {isEdit && (
               <button
                 className={`btn btn--danger ${confirmDelete ? 'btn--confirming' : ''}`}
                 onClick={handleDelete}
               >
                 {confirmDelete ? 'Confirm delete' : 'Delete'}
+              </button>
+            )}
+            {isEdit && !activity?.archived && (
+              <button
+                className="btn btn--ghost"
+                onClick={() => { onArchive(activity.id); onClose() }}
+              >
+                Archive
               </button>
             )}
           </div>

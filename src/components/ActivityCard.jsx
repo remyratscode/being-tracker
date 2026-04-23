@@ -1,8 +1,8 @@
 import FieldRenderer from './FieldRenderer'
-import { formatAvg } from '../hooks/useStats'
+import { formatAvg } from '../utils/time'
 
 export default function ActivityCard({
-  activity, entry, completionStatus, isDragOver, stats,
+  activity, entry, completionStatus, isDragOver, stats, tagColors,
   onFieldChange, onEdit, onHistory,
   onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd,
 }) {
@@ -41,9 +41,14 @@ export default function ActivityCard({
         <span className="activity-name">{activity.name}</span>
         <div className="activity-header-right">
           <div className="activity-tags">
-            {activity.tags.map(tag => (
-              <span key={tag} className="tag">{tag}</span>
-            ))}
+            {activity.tags.map(tag => {
+              const c = tagColors?.[tag] ?? '#52525b'
+              return (
+                <span key={tag} className="tag" style={{ color: c, background: `${c}1a` }}>
+                  {tag}
+                </span>
+              )
+            })}
           </div>
           <button className="card-icon-btn" onClick={onHistory} title="View history">≡</button>
           <button className="card-icon-btn" onClick={onEdit} title="Edit activity">✎</button>

@@ -1,14 +1,14 @@
 import { useState, useCallback } from 'react'
-import { loadTags, saveTags } from '../data/storage'
+import { loadTags, saveTags, TAG_PALETTE } from '../data/storage'
 
 export function useTags(activities) {
   const [tags, setTags] = useState(() => {
     const stored = loadTags()
     if (stored) return stored
-    // Seed from existing activities on first run
-    const derived = [...new Set(activities.flatMap(a => a.tags))].sort()
-    saveTags(derived)
-    return derived
+    const names = [...new Set(activities.flatMap(a => a.tags))].sort()
+    const seeded = names.map((name, i) => ({ name, color: TAG_PALETTE[i % TAG_PALETTE.length] }))
+    saveTags(seeded)
+    return seeded
   })
 
   const persist = useCallback((updater) => {
@@ -20,24 +20,28 @@ export function useTags(activities) {
   }, [])
 
   const addTag = useCallback((name) => {
-    const tag = name.trim().toLowerCase()
-    if (!tag) return
-    persist(prev => prev.includes(tag) ? prev : [...prev, tag])
+    const n = name.trim().toLowerCase()
+    if (!n) return
+    persist(prev => {
+      if (prev.some(t => t.name === n)) return prev
+      const color = TAG_PALETTE[prev.length % TAG_PALETTE.length]
+      return [...prev, { name: n, color }]
+    })
   }, [persist])
 
   const renameTag = useCallback((oldName, newName) => {
-    const tag = newName.trim().toLowerCase()
-    if (!tag || tag === oldName) return
-    persist(prev => prev.map(t => t === oldName ? tag : t))
+    const n = newName.trim().toLowerCase()
+    if (!n || n === oldName) return
+    persist(prev => prev.map(t => t.name === oldName ? { ...t, name: n } : t))
   }, [persist])
 
   const deleteTag = useCallback((name) => {
-    persist(prev => prev.filter(t => t !== name))
+    persist(prev => prev.filter(t => t.name !== name))
   }, [persist])
 
   const moveTag = useCallback((name, direction) => {
     persist(prev => {
-      const i = prev.indexOf(name)
+      const i = prev.findIndex(t => t.name === name)
       if (i === -1) return prev
       const next = [...prev]
       const target = i + direction
@@ -47,5 +51,9 @@ export function useTags(activities) {
     })
   }, [persist])
 
-  return { tags, addTag, renameTag, deleteTag, moveTag }
+  const updateTagColor = useCallback((name, color) => {
+    persist(prev => prev.map(t => t.name === name ? { ...t, color } : t))
+  }, [persist])
+
+  return { tags, addTag, renameTag, deleteTag, moveTag, updateTagColor }
 }

@@ -1,6 +1,19 @@
 const ACTIVITIES_KEY = 'lifelog:activities'
 const TAGS_KEY = 'lifelog:tags'
 
+export const TAG_PALETTE = [
+  '#f59e0b', // amber
+  '#3b82f6', // blue
+  '#10b981', // emerald
+  '#8b5cf6', // violet
+  '#f97316', // orange
+  '#06b6d4', // cyan
+  '#f43f5e', // rose
+  '#84cc16', // lime
+  '#a78bfa', // lavender
+  '#fb923c', // peach
+]
+
 export function loadActivities() {
   try {
     const raw = localStorage.getItem(ACTIVITIES_KEY)
@@ -19,7 +32,14 @@ export function saveActivities(activities) {
 export function loadTags() {
   try {
     const raw = localStorage.getItem(TAGS_KEY)
-    return raw ? JSON.parse(raw) : null
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed.length) return []
+    // Migrate: string[] → { name, color }[]
+    if (typeof parsed[0] === 'string') {
+      return parsed.map((name, i) => ({ name, color: TAG_PALETTE[i % TAG_PALETTE.length] }))
+    }
+    return parsed
   } catch {
     return null
   }

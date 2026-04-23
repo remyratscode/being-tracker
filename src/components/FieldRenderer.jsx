@@ -1,13 +1,4 @@
-function computeDuration(start, end) {
-  if (!start || !end) return null
-  const [sh, sm] = start.split(':').map(Number)
-  const [eh, em] = end.split(':').map(Number)
-  let mins = eh * 60 + em - (sh * 60 + sm)
-  if (mins < 0) mins += 1440
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
-}
+import { computeDuration } from '../utils/time'
 
 function checkGoal(field, actual) {
   const goal = field.config?.goal
@@ -211,6 +202,57 @@ function SelectF({ field, value, onChange }) {
   )
 }
 
+function RatingF({ field, value, onChange }) {
+  const max = field.config?.max ?? 5
+  const current = Number(value ?? 0)
+  return (
+    <div className="field">
+      <span className="field-label">{field.label}</span>
+      <div className="rating-stars">
+        {Array.from({ length: max }, (_, i) => i + 1).map(n => (
+          <button
+            key={n}
+            className={`rating-star ${n <= current ? 'rating-star--active' : ''}`}
+            onClick={() => onChange(n === current ? 0 : n)}
+            type="button"
+          >★</button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ChecklistF({ field, value, onChange }) {
+  const items = field.config?.items ?? []
+  const val = value ?? {}
+  const checkedCount = items.filter(item => val[item]).length
+  return (
+    <div className="field field--checklist">
+      <div className="field-checklist-header">
+        <span className="field-label">{field.label}</span>
+        {items.length > 0 && (
+          <span className="checklist-count">{checkedCount}/{items.length}</span>
+        )}
+      </div>
+      <div className="checklist-items">
+        {items.map(item => (
+          <label key={item} className="checklist-item">
+            <input
+              type="checkbox"
+              checked={!!val[item]}
+              onChange={e => onChange({ ...val, [item]: e.target.checked })}
+            />
+            <span className="checklist-item-label">{item}</span>
+          </label>
+        ))}
+        {items.length === 0 && (
+          <span className="checklist-empty">No items — add them in edit mode</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const renderers = {
   toggle: Toggle,
   text: TextF,
@@ -220,6 +262,8 @@ const renderers = {
   duration: Duration,
   quantity: QuantityF,
   select: SelectF,
+  rating: RatingF,
+  checklist: ChecklistF,
 }
 
 export default function FieldRenderer({ field, value, onChange }) {

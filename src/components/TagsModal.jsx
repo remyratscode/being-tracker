@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { TAG_PALETTE } from '../data/storage'
 
-export default function TagsModal({ tags, onAdd, onRename, onDelete, onMove, onClose }) {
+export default function TagsModal({ tags, onAdd, onRename, onDelete, onMove, onUpdateColor, onClose }) {
   const [newTag, setNewTag] = useState('')
   const [renamingTag, setRenamingTag] = useState(null)
   const [renameValue, setRenameValue] = useState('')
@@ -21,15 +22,21 @@ export default function TagsModal({ tags, onAdd, onRename, onDelete, onMove, onC
     if (tag) { onAdd(tag); setNewTag('') }
   }
 
-  function startRename(tag) {
-    setRenamingTag(tag)
-    setRenameValue(tag)
+  function startRename(name) {
+    setRenamingTag(name)
+    setRenameValue(name)
   }
 
   function commitRename() {
     const val = renameValue.trim().toLowerCase()
     if (val && val !== renamingTag) onRename(renamingTag, val)
     setRenamingTag(null)
+  }
+
+  function cycleColor(tag) {
+    const idx = TAG_PALETTE.indexOf(tag.color)
+    const next = TAG_PALETTE[(idx + 1) % TAG_PALETTE.length]
+    onUpdateColor(tag.name, next)
   }
 
   return (
@@ -47,23 +54,20 @@ export default function TagsModal({ tags, onAdd, onRename, onDelete, onMove, onC
               <p className="tags-empty">No tags yet. Create one below.</p>
             )}
             {tags.map((tag, i) => (
-              <div key={tag} className="tag-manage-row">
+              <div key={tag.name} className="tag-manage-row">
                 <div className="tag-manage-order">
-                  <button
-                    className="tag-order-btn"
-                    onClick={() => onMove(tag, -1)}
-                    disabled={i === 0}
-                    title="Move up"
-                  >↑</button>
-                  <button
-                    className="tag-order-btn"
-                    onClick={() => onMove(tag, 1)}
-                    disabled={i === tags.length - 1}
-                    title="Move down"
-                  >↓</button>
+                  <button className="tag-order-btn" onClick={() => onMove(tag.name, -1)} disabled={i === 0} title="Move up">↑</button>
+                  <button className="tag-order-btn" onClick={() => onMove(tag.name, 1)} disabled={i === tags.length - 1} title="Move down">↓</button>
                 </div>
 
-                {renamingTag === tag ? (
+                <button
+                  className="tag-color-cycle"
+                  style={{ background: tag.color }}
+                  onClick={() => cycleColor(tag)}
+                  title="Click to change colour"
+                />
+
+                {renamingTag === tag.name ? (
                   <input
                     className="form-input form-input--sm tag-rename-input"
                     value={renameValue}
@@ -76,18 +80,12 @@ export default function TagsModal({ tags, onAdd, onRename, onDelete, onMove, onC
                     }}
                   />
                 ) : (
-                  <span
-                    className="tag-manage-name"
-                    onClick={() => startRename(tag)}
-                    title="Click to rename"
-                  >{tag}</span>
+                  <span className="tag-manage-name" onClick={() => startRename(tag.name)} title="Click to rename">
+                    {tag.name}
+                  </span>
                 )}
 
-                <button
-                  className="tag-manage-delete"
-                  onClick={() => onDelete(tag)}
-                  title="Delete tag"
-                >×</button>
+                <button className="tag-manage-delete" onClick={() => onDelete(tag.name)} title="Delete tag">×</button>
               </div>
             ))}
           </div>
@@ -106,7 +104,7 @@ export default function TagsModal({ tags, onAdd, onRename, onDelete, onMove, onC
         </div>
 
         <div className="modal-footer">
-          <p className="tags-hint">Click a tag name to rename it. First tag = group on daily view.</p>
+          <p className="tags-hint">Click colour dot to cycle. Click name to rename. First tag = group.</p>
           <div className="modal-footer-right">
             <button className="btn btn--ghost" onClick={onClose}>Done</button>
           </div>

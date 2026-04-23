@@ -1,16 +1,6 @@
 import { useState, useEffect } from 'react'
 import { loadEntries } from '../data/storage'
-
-function computeDuration(start, end) {
-  if (!start || !end) return null
-  const [sh, sm] = start.split(':').map(Number)
-  const [eh, em] = end.split(':').map(Number)
-  let mins = eh * 60 + em - (sh * 60 + sm)
-  if (mins < 0) mins += 1440
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
-}
+import { computeDuration } from '../utils/time'
 
 function formatValue(field, value) {
   if (value === undefined || value === null || value === '') return '—'
@@ -25,6 +15,17 @@ function formatValue(field, value) {
     }
     case 'duration': return value ? `${value} min` : '—'
     case 'quantity': return value?.amount ? `${value.amount} ${value.unit ?? ''}`.trim() : '—'
+    case 'rating': {
+      const n = Number(value)
+      const max = field.config?.max ?? 5
+      return n > 0 ? `${'★'.repeat(n)}${'☆'.repeat(max - n)} (${n}/${max})` : '—'
+    }
+    case 'checklist': {
+      if (!value || typeof value !== 'object') return '—'
+      const items = field.config?.items ?? []
+      const checked = items.filter(i => value[i])
+      return checked.length ? `${checked.join(', ')} (${checked.length}/${items.length})` : '—'
+    }
     default: return String(value)
   }
 }
