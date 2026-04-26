@@ -1,4 +1,5 @@
 # Being Tracker — Codebase Notes
+*v1.0 — 2026-04-26*
 
 Personal daily tracking app. React 19 + Vite. No backend. All data in localStorage.
 Run: `npm run dev` → localhost:5173
