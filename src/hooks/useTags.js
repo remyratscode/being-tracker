@@ -1,14 +1,13 @@
 import { useState, useCallback } from 'react'
 import { loadTags, saveTags, TAG_PALETTE } from '../data/storage'
+import { defaultTags } from '../data/defaults'
 
 export function useTags(activities) {
   const [tags, setTags] = useState(() => {
     const stored = loadTags()
     if (stored) return stored
-    const names = [...new Set(activities.flatMap(a => a.tags))].sort()
-    const seeded = names.map((name, i) => ({ name, color: TAG_PALETTE[i % TAG_PALETTE.length] }))
-    saveTags(seeded)
-    return seeded
+    saveTags(defaultTags)
+    return defaultTags
   })
 
   const persist = useCallback((updater) => {

@@ -1,48 +1,74 @@
+export const defaultTags = [
+  { name: 'morning', color: '#f59e0b' },
+  { name: 'routines', color: '#10b981' },
+  { name: 'body', color: '#3b82f6' },
+  { name: 'work', color: '#8b5cf6' },
+  { name: 'evening', color: '#06b6d4' },
+]
+
 export const defaultActivities = [
+  // ── Morning ──────────────────────────────────────────────────────────────
   {
-    id: 'sleep',
-    name: 'Sleep',
-    tags: ['night', 'body', 'recovery'],
+    id: 'wake-time',
+    name: 'Wake time',
+    type: 'outcome',
+    tags: ['morning'],
     fields: [
-      { id: 'range', label: 'Sleep', type: 'time_range', config: {} },
+      { id: 'time', label: 'Time', type: 'time_point', config: {} },
     ],
   },
   {
-    id: 'red-lights',
-    name: 'Red lights',
-    tags: ['night', 'sleep hygiene'],
+    id: 'sleep-duration',
+    name: 'Sleep duration',
+    type: 'outcome',
+    tags: ['morning'],
+    fields: [
+      { id: 'duration', label: 'Duration', type: 'duration', config: { goal: { target: 420, operator: 'gte' } } },
+    ],
+  },
+  {
+    id: 'sleep-quality',
+    name: 'Sleep quality',
+    type: 'outcome',
+    tags: ['morning'],
+    fields: [
+      { id: 'rating', label: 'Quality', type: 'rating', config: { goal: { target: 4, operator: 'gte' } } },
+    ],
+  },
+  {
+    id: 'morning-energy',
+    name: 'Morning energy',
+    type: 'outcome',
+    tags: ['morning'],
+    fields: [
+      { id: 'rating', label: 'Energy', type: 'rating', config: {} },
+    ],
+  },
+  {
+    id: 'mood',
+    name: 'Mood',
+    type: 'outcome',
+    tags: ['morning'],
+    fields: [
+      { id: 'rating', label: 'Mood', type: 'rating', config: {} },
+    ],
+  },
+
+  // ── Routines ─────────────────────────────────────────────────────────────
+  {
+    id: 'morning-sunlight',
+    name: 'Morning sunlight',
+    type: 'input',
+    tags: ['routines'],
     fields: [
       { id: 'done', label: 'Done', type: 'toggle', config: {} },
     ],
   },
   {
-    id: 'blue-light-glasses',
-    name: 'Blue light glasses',
-    tags: ['night', 'sleep hygiene'],
-    fields: [
-      { id: 'done', label: 'Done', type: 'toggle', config: {} },
-    ],
-  },
-  {
-    id: 'phone-away',
-    name: 'Phone away from bed',
-    tags: ['night', 'sleep hygiene', 'habits'],
-    fields: [
-      { id: 'done', label: 'Done', type: 'toggle', config: {} },
-    ],
-  },
-  {
-    id: 'off-phone-morning',
-    name: 'Off phone 45 min',
-    tags: ['morning', 'habits', 'mind'],
-    fields: [
-      { id: 'done', label: 'Done', type: 'toggle', config: {} },
-    ],
-  },
-  {
-    id: 'outside-breathe',
-    name: 'Outside & breathe',
-    tags: ['morning', 'body', 'habits'],
+    id: 'cold-shower',
+    name: 'Cold shower',
+    type: 'input',
+    tags: ['routines'],
     fields: [
       { id: 'done', label: 'Done', type: 'toggle', config: {} },
     ],
@@ -50,15 +76,18 @@ export const defaultActivities = [
   {
     id: 'meditation',
     name: 'Meditation',
-    tags: ['morning', 'mind', 'spirit'],
+    type: 'input',
+    tags: ['routines'],
     fields: [
       { id: 'done', label: 'Done', type: 'toggle', config: {} },
+      { id: 'duration', label: 'Duration', type: 'duration', config: {} },
     ],
   },
   {
     id: 'journaling',
     name: 'Journaling',
-    tags: ['morning', 'mind', 'spirit'],
+    type: 'input',
+    tags: ['routines'],
     fields: [
       { id: 'done', label: 'Done', type: 'toggle', config: {} },
     ],
@@ -66,70 +95,109 @@ export const defaultActivities = [
   {
     id: 'reading',
     name: 'Reading',
-    tags: ['morning', 'mind', 'learning'],
+    type: 'input',
+    tags: ['routines'],
     fields: [
       { id: 'done', label: 'Done', type: 'toggle', config: {} },
-      { id: 'pages', label: 'Pages read', type: 'number', config: { placeholder: '0' } },
+      { id: 'duration', label: 'Duration', type: 'duration', config: {} },
     ],
   },
-  {
-    id: 'supplements',
-    name: 'Supplements',
-    tags: ['morning', 'body', 'supplements'],
-    fields: [
-      { id: 'done', label: 'Done', type: 'toggle', config: {} },
-    ],
-  },
+
+  // ── Body ─────────────────────────────────────────────────────────────────
   {
     id: 'workout',
     name: 'Workout',
-    tags: ['body', 'fitness'],
+    type: 'input',
+    tags: ['body'],
     fields: [
+      { id: 'done', label: 'Done', type: 'toggle', config: {} },
       { id: 'type', label: 'Type', type: 'select', config: { options: ['Strength', 'Cardio', 'Mobility', 'Sport', 'Other'] } },
-      { id: 'range', label: 'Session', type: 'time_range', config: {} },
+      { id: 'duration', label: 'Duration', type: 'duration', config: {} },
     ],
   },
   {
-    id: 'stretching',
-    name: 'Stretching',
-    tags: ['body', 'fitness', 'mobility'],
+    id: 'hydration',
+    name: 'Hydration',
+    type: 'outcome',
+    tags: ['body'],
+    fields: [
+      { id: 'rating', label: 'Rating', type: 'rating', config: {} },
+    ],
+  },
+  {
+    id: 'nutrition-quality',
+    name: 'Nutrition quality',
+    type: 'outcome',
+    tags: ['body'],
+    fields: [
+      { id: 'rating', label: 'Quality', type: 'rating', config: {} },
+    ],
+  },
+
+  // ── Work ─────────────────────────────────────────────────────────────────
+  {
+    id: 'deep-work',
+    name: 'Deep work',
+    type: 'input',
+    tags: ['work'],
+    fields: [
+      { id: 'duration', label: 'Duration', type: 'duration', config: { goal: { target: 120, operator: 'gte' } } },
+    ],
+  },
+  {
+    id: 'focus-clarity',
+    name: 'Focus / clarity',
+    type: 'outcome',
+    tags: ['work'],
+    fields: [
+      { id: 'rating', label: 'Rating', type: 'rating', config: {} },
+    ],
+  },
+
+  // ── Evening ──────────────────────────────────────────────────────────────
+  {
+    id: 'blue-light-glasses',
+    name: 'Blue light glasses',
+    type: 'input',
+    tags: ['evening'],
     fields: [
       { id: 'done', label: 'Done', type: 'toggle', config: {} },
-      { id: 'duration', label: 'Duration', type: 'duration', config: {} },
     ],
   },
   {
-    id: 'eating',
-    name: 'Eating',
-    tags: ['body', 'nutrition'],
-    fields: [
-      { id: 'notes', label: 'Notes', type: 'text', config: { placeholder: 'How did you eat today' } },
-    ],
-  },
-  {
-    id: 'coding',
-    name: 'Coding',
-    tags: ['skills', 'learning', 'day'],
-    fields: [
-      { id: 'duration', label: 'Duration', type: 'duration', config: {} },
-      { id: 'notes', label: 'Notes', type: 'text', config: { placeholder: 'What you built' } },
-    ],
-  },
-  {
-    id: 'university',
-    name: 'University',
-    tags: ['mind', 'learning', 'day'],
-    fields: [
-      { id: 'duration', label: 'Duration', type: 'duration', config: {} },
-      { id: 'notes', label: 'Notes', type: 'text', config: { placeholder: 'What you worked on' } },
-    ],
-  },
-  {
-    id: 'parents',
-    name: 'Talked to parents',
-    tags: ['relationships', 'day'],
+    id: 'red-light-therapy',
+    name: 'Red light therapy',
+    type: 'input',
+    tags: ['evening'],
     fields: [
       { id: 'done', label: 'Done', type: 'toggle', config: {} },
+    ],
+  },
+  {
+    id: 'screen-cutoff',
+    name: 'Screen cutoff',
+    type: 'input',
+    tags: ['evening'],
+    fields: [
+      { id: 'time', label: 'Time', type: 'time_point', config: {} },
+    ],
+  },
+  {
+    id: 'last-meal',
+    name: 'Last meal',
+    type: 'input',
+    tags: ['evening'],
+    fields: [
+      { id: 'time', label: 'Time', type: 'time_point', config: {} },
+    ],
+  },
+  {
+    id: 'bedtime',
+    name: 'Bedtime',
+    type: 'input',
+    tags: ['evening'],
+    fields: [
+      { id: 'time', label: 'Time', type: 'time_point', config: {} },
     ],
   },
 ]

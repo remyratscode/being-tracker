@@ -69,7 +69,7 @@ const sections = [
       { label: 'Where', body: 'Browser localStorage only. Nothing leaves your device.' },
       { label: 'Keys', body: 'lifelog:activities — schemas\nlifelog:tags — tag order\nlifelog:entries:YYYY-MM-DD — daily data' },
       { label: 'Auto-save', body: 'Every field change saves immediately. No save button.' },
-      { label: 'Note', body: 'Clearing browser data erases everything. Export/import is a planned feature.' },
+      { label: 'Note', body: 'Clearing browser data erases everything. Use the ↓ export and ↑ import buttons in the header to back up and restore your data.' },
     ],
   },
 ]
