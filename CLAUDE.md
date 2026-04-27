@@ -152,6 +152,14 @@ lifelog:entries:YYYY-MM-DD   (one key per day, indefinitely)
 
 ---
 
+## Data Survival Principle
+
+Structural evolution of the system does not require data deletion. When an activity is renamed, split into multiple trackables, or replaced — its historical entries remain in localStorage under the original activityId. That data retains analytical value even if the activity schema has changed.
+
+The analysis layer is designed to interpret evolving data structures over time. Orphaned entries (entries whose activityId no longer matches an active trackable) are not garbage — they are historical signal. The AI can bridge old and new schemas, helping surface what the old data means in the context of the new structure.
+
+Practical implication: prefer archiving over deleting. When expanding an activity into multiple trackables, archive the original rather than deleting it. Its data persists and remains queryable.
+
 ## Known Gaps
 
 - Calendar heatmap view

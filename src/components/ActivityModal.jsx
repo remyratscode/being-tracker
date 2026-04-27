@@ -128,7 +128,7 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onA
       <div className="modal" role="dialog" aria-modal="true">
 
         <div className="modal-header">
-          <span className="modal-title">{isEdit ? 'Edit activity' : 'New activity'}</span>
+          <span className="modal-title">{isEdit ? 'Edit trackable' : 'New trackable'}</span>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
@@ -164,7 +164,7 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onA
                 id="tag-input"
                 className="tag-text-input"
                 value={tagInput}
-                placeholder={tags.length === 0 ? 'morning, body, habits...' : ''}
+                placeholder={tags.length === 0 ? 'morning, evening, body...' : ''}
                 onChange={e => setTagInput(e.target.value)}
                 onKeyDown={onTagKey}
                 onFocus={() => setTagFocused(true)}

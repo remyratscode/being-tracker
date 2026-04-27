@@ -29,7 +29,7 @@ export default function App() {
   const [tagsOpen, setTagsOpen] = useState(false)
   const [historyActivity, setHistoryActivity] = useState(null)
   const [helpOpen, setHelpOpen] = useState(false)
-  const [filterTag, setFilterTag] = useState(null)
+  const [filterTags, setFilterTags] = useState(new Set())
   const [archivedOpen, setArchivedOpen] = useState(false)
 
   const draggingId = useRef(null)
@@ -76,8 +76,8 @@ export default function App() {
     return result
   }, [activeActivities, tags])
 
-  const visibleGroups = filterTag
-    ? groups.filter(g => g.tag === filterTag)
+  const visibleGroups = filterTags.size > 0
+    ? groups.filter(g => filterTags.has(g.tag))
     : groups
 
   // Progress ring data — reactive to entry changes via getEntry
@@ -121,7 +121,7 @@ export default function App() {
       <header className="app-header">
         <div className="app-header-left">
           <span className="app-name">Life Log</span>
-          <button className="add-activity-btn" onClick={() => setModal('create')} title="New activity">+</button>
+          <button className="add-activity-btn" onClick={() => setModal('create')} title="New trackable">+</button>
           <button className="tags-manage-btn" onClick={() => setTagsOpen(true)} title="Manage tags">#</button>
           <button className="help-btn" onClick={() => setHelpOpen(true)} title="Help">?</button>
           <button className="header-icon-btn" onClick={exportData} title="Export backup">↓</button>
@@ -157,9 +157,19 @@ export default function App() {
         {/* Tag filter chips */}
         {groups.length > 1 && (
           <div className="tag-filter-bar">
+            <button
+              className={`tag-filter-chip ${filterTags.size === 0 ? 'tag-filter-chip--active' : ''}`}
+              style={filterTags.size === 0
+                ? { background: 'var(--color-text-muted)22', color: 'var(--color-text)', borderColor: 'var(--color-text-muted)' }
+                : { color: 'var(--color-text-muted)', borderColor: 'var(--color-border)' }
+              }
+              onClick={() => setFilterTags(new Set())}
+            >
+              All
+            </button>
             {groups.map(({ tag }) => {
               const color = tagColors[tag] ?? '#52525b'
-              const active = filterTag === tag
+              const active = filterTags.size === 0 || filterTags.has(tag)
               return (
                 <button
                   key={tag ?? '__untagged'}
@@ -168,7 +178,13 @@ export default function App() {
                     ? { background: `${color}22`, color, borderColor: color }
                     : { color, borderColor: `${color}44` }
                   }
-                  onClick={() => setFilterTag(prev => prev === tag ? null : tag)}
+                  onClick={() => setFilterTags(prev => {
+                    const base = prev.size === 0
+                      ? new Set(groups.map(g => g.tag))
+                      : new Set(prev)
+                    base.has(tag) ? base.delete(tag) : base.add(tag)
+                    return base.size === groups.length ? new Set() : base
+                  })}
                 >
                   {tag ?? 'Uncategorized'}
                 </button>
@@ -223,11 +239,11 @@ export default function App() {
         ))}
 
         {activeActivities.length === 0 && (
-          <p className="empty-state">No activities yet. Create one to get started.</p>
+          <p className="empty-state">No trackables yet. Create one to get started.</p>
         )}
 
         <button className="add-activity-card" onClick={() => setModal('create')}>
-          + New activity
+          + New trackable
         </button>
 
         {/* Archived section */}

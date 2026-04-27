@@ -51,7 +51,7 @@ export default function ActivityCard({
             })}
           </div>
           <button className="card-icon-btn" onClick={onHistory} title="View history">≡</button>
-          <button className="card-icon-btn" onClick={onEdit} title="Edit activity">✎</button>
+          <button className="card-icon-btn" onClick={onEdit} title="Edit trackable">✎</button>
         </div>
       </div>
 
