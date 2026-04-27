@@ -173,8 +173,24 @@ Practical implication: prefer archiving over deleting. When expanding an activit
 
 ## Backlog (priority order)
 
-1. Calendar heatmap
-2. Weekly view / data visualization
-3. Analysis domain system
-4. AI integration
-5. Voice input (Web Speech API — browser-native, no backend needed)
+**Now — before first logging session**
+1. Add individual supplement trackables (creatine, magnesium, vitamin D, fish oil etc.)
+2. Rename "Tags" label → "Group" in ActivityModal (reduces confusion with the new mental model)
+
+**This week — as logging begins**
+3. Structural changelog — lightweight record of when trackables are created, archived, renamed, or split. Gives the analysis layer full context on system evolution from day one.
+
+**Weeks 1–2 — first visual feedback**
+4. Calendar heatmap — consistency view over time, motivating, reads existing entry data, no model changes
+
+**Weeks 2–4 — as trackable list grows**
+5. Containers — collapsible groupings within capture groups, batch-complete action (e.g. one tap to mark all supplements done)
+
+**Weeks 4–8 — the unlock**
+6. AI conversational input — text → structured entries, voice on top via Web Speech API
+7. Rename "Tags" manager to "Groups" manager throughout UI
+
+**Month 2+ — the payoff**
+8. Analysis domain system — correlations, pattern discovery, which inputs move which outcomes
+9. Weekly summary / data visualization
+10. Full AI analysis and mentorship mode
