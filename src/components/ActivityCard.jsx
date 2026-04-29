@@ -1,11 +1,26 @@
 import FieldRenderer from './FieldRenderer'
-import { formatAvg } from '../utils/time'
+import { formatAvg, nowTimeStr } from '../utils/time'
 
 export default function ActivityCard({
   activity, entry, completionStatus, isDragOver, stats, tagColors,
   onFieldChange, onEdit, onHistory,
   onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd,
 }) {
+  function handleChange(field, value) {
+    onFieldChange(field.id, value)
+    if (field.type === 'toggle' && value === true) {
+      const values = entry?.values ?? {}
+      for (const f of activity.fields) {
+        if (f.id === field.id) continue
+        if (f.type === 'time_point' && !values[f.id]) {
+          onFieldChange(f.id, nowTimeStr())
+        }
+        if (f.type === 'number' && f.config?.defaultValue !== undefined && !values[f.id]) {
+          onFieldChange(f.id, String(f.config.defaultValue))
+        }
+      }
+    }
+  }
   const cardClass = [
     'activity-card',
     completionStatus === 'complete' ? 'activity-card--complete' : '',
@@ -61,7 +76,7 @@ export default function ActivityCard({
             key={field.id}
             field={field}
             value={entry?.values?.[field.id]}
-            onChange={value => onFieldChange(field.id, value)}
+            onChange={value => handleChange(field, value)}
           />
         ))}
       </div>

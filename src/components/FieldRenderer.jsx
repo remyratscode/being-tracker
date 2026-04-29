@@ -157,27 +157,44 @@ function Duration({ field, value, onChange }) {
 function QuantityF({ field, value, onChange }) {
   const val = value ?? {}
   const units = field.config.units?.length ? field.config.units : ['g', 'kg', 'ml', 'capsules']
+  const bottleSize = field.config.bottleSize
   const goalResult = val.amount !== '' && val.amount !== undefined
     ? checkGoal(field, Number(val.amount)) : null
+
+  function adjustBottle(delta) {
+    const current = Number(val.amount) || 0
+    onChange({ ...val, amount: String(Math.max(0, current + delta)), unit: val.unit ?? units[0] })
+  }
+
   return (
     <div className="field">
       <span className="field-label">{field.label}</span>
       <div className="field-unit-group">
+        {bottleSize && (
+          <button className="bottle-btn" type="button" onClick={() => adjustBottle(-bottleSize)}>−</button>
+        )}
         <input
           className="field-input field-input--narrow"
           type="number"
           value={val.amount ?? ''}
           placeholder="0"
           min="0"
-          onChange={e => onChange({ ...val, amount: e.target.value })}
+          onChange={e => onChange({ ...val, amount: e.target.value, unit: val.unit ?? units[0] })}
         />
-        <select
-          className="field-input field-select field-select--unit"
-          value={val.unit ?? units[0]}
-          onChange={e => onChange({ ...val, unit: e.target.value })}
-        >
-          {units.map(u => <option key={u} value={u}>{u}</option>)}
-        </select>
+        {bottleSize && (
+          <button className="bottle-btn" type="button" onClick={() => adjustBottle(bottleSize)}>+</button>
+        )}
+        {units.length > 1 ? (
+          <select
+            className="field-input field-select field-select--unit"
+            value={val.unit ?? units[0]}
+            onChange={e => onChange({ ...val, unit: e.target.value })}
+          >
+            {units.map(u => <option key={u} value={u}>{u}</option>)}
+          </select>
+        ) : (
+          <span className="field-unit">{units[0]}</span>
+        )}
         {goalResult && <GoalBadge {...goalResult} />}
       </div>
     </div>
@@ -205,18 +222,22 @@ function SelectF({ field, value, onChange }) {
 function RatingF({ field, value, onChange }) {
   const max = field.config?.max ?? 5
   const current = Number(value ?? 0)
+  const goalResult = current > 0 ? checkGoal(field, current) : null
   return (
     <div className="field">
       <span className="field-label">{field.label}</span>
-      <div className="rating-stars">
-        {Array.from({ length: max }, (_, i) => i + 1).map(n => (
-          <button
-            key={n}
-            className={`rating-star ${n <= current ? 'rating-star--active' : ''}`}
-            onClick={() => onChange(n === current ? 0 : n)}
-            type="button"
-          >★</button>
-        ))}
+      <div className="field-unit-group">
+        <div className="rating-stars">
+          {Array.from({ length: max }, (_, i) => i + 1).map(n => (
+            <button
+              key={n}
+              className={`rating-star ${n <= current ? 'rating-star--active' : ''}`}
+              onClick={() => onChange(n === current ? 0 : n)}
+              type="button"
+            >★</button>
+          ))}
+        </div>
+        {goalResult && <GoalBadge {...goalResult} />}
       </div>
     </div>
   )

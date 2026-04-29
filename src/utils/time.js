@@ -1,3 +1,8 @@
+export function nowTimeStr() {
+  const now = new Date()
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+}
+
 export function computeDuration(start, end) {
   if (!start || !end) return null
   const [sh, sm] = start.split(':').map(Number)

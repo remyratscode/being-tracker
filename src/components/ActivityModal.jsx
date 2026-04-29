@@ -22,6 +22,7 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onA
   const nameRef = useRef(null)
 
   const [name, setName] = useState(activity?.name ?? '')
+  const [type, setType] = useState(activity?.type ?? 'input')
   const [tags, setTags] = useState(activity?.tags ?? [])
   const [fields, setFields] = useState(
     activity?.fields?.length ? activity.fields : [newField()]
@@ -91,7 +92,7 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onA
     return ''
   }
 
-  const GOAL_TYPES = ['number', 'duration', 'time_range', 'quantity']
+  const GOAL_TYPES = ['number', 'duration', 'time_range', 'quantity', 'rating']
 
   function removeField(id) {
     setFields(prev => prev.filter(f => f.id !== id))
@@ -106,6 +107,7 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onA
     onSave({
       id: activity?.id ?? crypto.randomUUID(),
       name: name.trim(),
+      type,
       tags,
       fields: fields.map(f => ({
         id: f.id,
@@ -147,9 +149,26 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onA
             />
           </div>
 
+          {/* Type */}
+          <div className="form-group">
+            <label className="form-label">Type</label>
+            <div className="type-toggle">
+              <button
+                type="button"
+                className={`type-btn ${type === 'input' ? 'type-btn--active' : ''}`}
+                onClick={() => setType('input')}
+              >Input</button>
+              <button
+                type="button"
+                className={`type-btn ${type === 'outcome' ? 'type-btn--active' : ''}`}
+                onClick={() => setType('outcome')}
+              >Outcome</button>
+            </div>
+          </div>
+
           {/* Tags */}
           <div className="form-group">
-            <label className="form-label">Tags</label>
+            <label className="form-label">Group</label>
             <div className="tag-input-wrap" onClick={() => document.getElementById('tag-input').focus()}>
               {tags.map(tag => {
                 const c = tagColorMap[tag] ?? '#52525b'

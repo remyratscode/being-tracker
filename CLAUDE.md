@@ -1,5 +1,5 @@
 # Being Tracker — Codebase Notes
-*v1.0 — 2026-04-26*
+*v1.3 — 2026-04-29*
 
 Personal daily tracking app. React 19 + Vite. No backend. All data in localStorage.
 Run: `npm run dev` → localhost:5173
@@ -14,7 +14,7 @@ The logging is just fuel. The real product is the clarity it generates over time
 
 ### Structural Philosophy
 
-**Capture groups** — UX containers only (Morning, Routines, Body, Work, Evening). Purely navigational. Renaming or reorganising them has zero effect on data. They represent your current best guess and will evolve.
+**Capture groups** — UX containers only (Morning, Routines, Body, Work, Mind, Evening). Purely navigational. Renaming or reorganising them has zero effect on data. They represent your current best guess and will evolve.
 
 **Trackables** — every individual thing logged is its own entity:
 - *Input trackables* — things you directly do or control (workout, blue light glasses, meditation)
@@ -93,6 +93,8 @@ ORDER MATTERS — tag order controls group order in daily view and progress ring
 8. useStats runs on activities + date changes, NOT entry changes. Streaks/averages are not live — intentional to avoid 14-day localStorage reads on every keypress.
 9. Completion logic lives ONLY in `utils/completion.js`. `getCompletionStatus()` is the single source of truth. Do not duplicate.
 10. `persist(updater)` pattern in hooks calls setState + saveToStorage atomically. Never call saveActivities/saveTags directly from a component.
+11. `config.defaultValue` on number fields — auto-filled when a toggle sibling fires ON (if field is currently empty). See ActivityCard handleChange.
+12. `config.bottleSize` on quantity fields — enables ±increment buttons in FieldRenderer. Single-unit quantity fields show unit as plain text, not dropdown.
 
 ---
 
@@ -142,13 +144,19 @@ lifelog:entries:YYYY-MM-DD   (one key per day, indefinitely)
 
 - Archive activities (useActivities.js + collapsible section in App.jsx)
 - Export / import JSON (utils/backup.js + header buttons)
-- Tag filter on daily view (App.jsx)
+- Tag filter on daily view — multi-toggle with All chip (App.jsx)
 - Rating field type (star UI in FieldRenderer.jsx)
 - Checklist field type (checkboxes with count in FieldRenderer.jsx)
 - History modal — last 30 days, no pagination (HistoryModal.jsx)
 - 14-day rolling stats + streaks on activity cards
 - Progress ring (SVG, grouped by first tag)
 - Drag-to-reorder activities
+- Input / outcome type on all trackables — set via toggle in ActivityModal, stored on activity
+- Auto-time on toggle — toggling ON auto-fills empty time_point sibling fields with current time (ActivityCard.jsx)
+- Default value on toggle — toggling ON auto-fills empty number fields that have config.defaultValue (ActivityCard.jsx)
+- Bottle buttons on quantity fields — config.bottleSize enables ±increment buttons (FieldRenderer.jsx)
+- Single-unit quantity fields show unit as text label, not dropdown (FieldRenderer.jsx)
+- 31 default trackables across 6 groups: Morning, Routines, Body, Work, Mind, Evening
 
 ---
 
@@ -173,24 +181,21 @@ Practical implication: prefer archiving over deleting. When expanding an activit
 
 ## Backlog (priority order)
 
-**Now — before first logging session**
-1. Add individual supplement trackables (creatine, magnesium, vitamin D, fish oil etc.)
-2. Rename "Tags" label → "Group" in ActivityModal (reduces confusion with the new mental model)
-
-**This week — as logging begins**
-3. Structural changelog — lightweight record of when trackables are created, archived, renamed, or split. Gives the analysis layer full context on system evolution from day one.
+**Now — active**
+1. Structural changelog — lightweight record of when trackables are created, archived, renamed, or split. Storage key `lifelog:changelog`, append-only array of events `{ type, activityId, activityName, timestamp, meta }`. Hook into useActivities.js persist points. Include in JSON export.
+2. Migration system — function that syncs missing defaultActivities/defaultTags into existing localStorage without touching entries. Needed before sharing or multi-device use.
 
 **Weeks 1–2 — first visual feedback**
-4. Calendar heatmap — consistency view over time, motivating, reads existing entry data, no model changes
+3. Calendar heatmap — consistency view over time, motivating, reads existing entry data, no model changes
 
 **Weeks 2–4 — as trackable list grows**
-5. Containers — collapsible groupings within capture groups, batch-complete action (e.g. one tap to mark all supplements done)
+4. Containers — collapsible groupings within capture groups, batch-complete action (e.g. one tap to mark all supplements done)
 
 **Weeks 4–8 — the unlock**
-6. AI conversational input — text → structured entries, voice on top via Web Speech API
-7. Rename "Tags" manager to "Groups" manager throughout UI
+5. AI conversational input — text → structured entries, voice on top via Web Speech API
+6. Rename "Tags" manager to "Groups" manager throughout UI
 
 **Month 2+ — the payoff**
-8. Analysis domain system — correlations, pattern discovery, which inputs move which outcomes
-9. Weekly summary / data visualization
-10. Full AI analysis and mentorship mode
+7. Analysis domain system — correlations, pattern discovery, which inputs move which outcomes
+8. Weekly summary / data visualization
+9. Full AI analysis and mentorship mode
