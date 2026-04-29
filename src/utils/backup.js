@@ -1,9 +1,10 @@
 export function exportData() {
   const data = {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     activities: JSON.parse(localStorage.getItem('lifelog:activities') ?? 'null'),
     tags: JSON.parse(localStorage.getItem('lifelog:tags') ?? 'null'),
+    changelog: JSON.parse(localStorage.getItem('lifelog:changelog') ?? '[]'),
     entries: {},
   }
   for (let i = 0; i < localStorage.length; i++) {
@@ -31,6 +32,7 @@ export function importData(file) {
         if (!data.activities) throw new Error('Invalid backup file')
         localStorage.setItem('lifelog:activities', JSON.stringify(data.activities))
         if (data.tags) localStorage.setItem('lifelog:tags', JSON.stringify(data.tags))
+        if (data.changelog) localStorage.setItem('lifelog:changelog', JSON.stringify(data.changelog))
         if (data.entries) {
           Object.entries(data.entries).forEach(([date, entries]) => {
             localStorage.setItem(`lifelog:entries:${date}`, JSON.stringify(entries))
