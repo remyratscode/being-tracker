@@ -1,15 +1,10 @@
-const KEY = 'lifelog:changelog'
+import { supabase } from '../lib/supabase'
 
-export function loadChangelog() {
-  try {
-    return JSON.parse(localStorage.getItem(KEY)) ?? []
-  } catch {
-    return []
-  }
-}
-
-export function appendChangelogEvent(event) {
-  const log = loadChangelog()
-  log.push({ ...event, timestamp: new Date().toISOString() })
-  localStorage.setItem(KEY, JSON.stringify(log))
+export async function appendChangelogEvent(event) {
+  await supabase.from('changelog').insert({
+    type: event.type,
+    activity_id: event.activityId,
+    activity_name: event.activityName,
+    meta: event.meta ?? {},
+  })
 }

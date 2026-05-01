@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useCallback } from 'react'
 import DateNav, { todayStr } from './components/DateNav'
 import WeekStrip from './components/WeekStrip'
 import ProgressRing from './components/ProgressRing'
@@ -7,24 +7,33 @@ import ActivityModal from './components/ActivityModal'
 import TagsModal from './components/TagsModal'
 import HistoryModal from './components/HistoryModal'
 import HelpPanel from './components/HelpPanel'
+import HeatmapView from './components/HeatmapView'
+import HeatmapWidget from './components/HeatmapWidget'
+import ContainerBlock from './components/ContainerBlock'
 import { useActivities } from './hooks/useActivities'
 import { useEntries } from './hooks/useEntries'
 import { useTags } from './hooks/useTags'
 import { useStats } from './hooks/useStats'
+import { useContainers } from './hooks/useContainers'
 import { getCompletionStatus } from './utils/completion'
 import { exportData, importData } from './utils/backup'
+import { nowTimeStr } from './utils/time'
+import { supabase } from './lib/supabase'
 
 export default function App() {
   const [date, setDate] = useState(todayStr)
   const {
-    activities,
+    activities, ready,
     addActivity, updateActivity, deleteActivity,
     archiveActivity, unarchiveActivity,
     renameTagAcrossActivities, reorderActivity,
   } = useActivities()
   const { getEntry, setFieldValue } = useEntries(date)
-  const { tags, addTag, renameTag, deleteTag, moveTag, updateTagColor } = useTags(activities)
+  const { tags, addTag, renameTag, deleteTag, moveTag, updateTagColor } = useTags()
+  const { containers, addContainer, renameContainer, deleteContainer } = useContainers()
 
+  const [view, setView] = useState('daily')
+  const [widgetOpen, setWidgetOpen] = useState(false)
   const [modal, setModal] = useState(null)
   const [tagsOpen, setTagsOpen] = useState(false)
   const [historyActivity, setHistoryActivity] = useState(null)
@@ -51,10 +60,33 @@ export default function App() {
   )
 
   function handleSave(activityData) {
-    if (editingActivity) updateActivity(activityData.id, activityData)
-    else addActivity(activityData)
-    activityData.tags.forEach(t => addTag(t))
+    const { _newContainer, ...data } = activityData
+    if (_newContainer) addContainer(_newContainer.name, _newContainer.tag, _newContainer.id)
+    if (editingActivity) updateActivity(data.id, data)
+    else addActivity(data)
+    data.tags.forEach(t => addTag(t))
   }
+
+  const batchComplete = useCallback((activityIds) => {
+    const now = nowTimeStr()
+    activityIds.forEach(actId => {
+      const activity = activities.find(a => a.id === actId)
+      if (!activity) return
+      const entry = getEntry(actId)
+      const values = entry?.values ?? {}
+      activity.fields.forEach(field => {
+        if (field.type === 'toggle' && !values[field.id]) {
+          setFieldValue(actId, field.id, true)
+          activity.fields.forEach(f => {
+            if (f.id === field.id) return
+            if (f.type === 'time_point' && !values[f.id]) setFieldValue(actId, f.id, now)
+            if (f.type === 'number' && f.config?.defaultValue !== undefined && !values[f.id])
+              setFieldValue(actId, f.id, String(f.config.defaultValue))
+          })
+        }
+      })
+    })
+  }, [activities, getEntry, setFieldValue])
 
   function handleRenameTag(oldName, newName) {
     renameTag(oldName, newName)
@@ -116,43 +148,69 @@ export default function App() {
     }
   }
 
+  function handleDayClick(clickedDate) {
+    setDate(clickedDate)
+    setView('daily')
+  }
+
   return (
     <div className="app">
       <header className="app-header">
-        <div className="app-header-left">
-          <span className="app-name">Life Log</span>
-          <button className="add-activity-btn" onClick={() => setModal('create')} title="New trackable">+</button>
-          <button className="tags-manage-btn" onClick={() => setTagsOpen(true)} title="Manage tags">#</button>
-          <button className="help-btn" onClick={() => setHelpOpen(true)} title="Help">?</button>
-          <button className="header-icon-btn" onClick={exportData} title="Export backup">↓</button>
-          <button className="header-icon-btn" onClick={() => importRef.current.click()} title="Import backup">↑</button>
-          <input
-            ref={importRef}
-            type="file"
-            accept=".json"
-            style={{ display: 'none' }}
-            onChange={handleImport}
-          />
+        <span className="app-name">Being Tracker</span>
+
+        <nav className="app-nav">
+          <button className={`nav-tab${view === 'daily' ? ' nav-tab--active' : ''}`} onClick={() => setView('daily')}>Daily</button>
+          <button className={`nav-tab${view === 'heatmap' ? ' nav-tab--active' : ''}`} onClick={() => setView('heatmap')}>Heatmap</button>
+        </nav>
+
+        <div className="app-header-actions">
+          <button className="header-action-btn" onClick={() => setModal('create')} title="New trackable">+</button>
+          <button className="header-action-btn" onClick={() => setTagsOpen(true)} title="Manage groups">#</button>
+          <button className="header-action-btn mobile-hide" onClick={() => setWidgetOpen(o => !o)} title="Toggle heatmap widget">▦</button>
+          <span className="header-divider mobile-hide" />
+          <button className="header-action-btn mobile-hide" onClick={() => setHelpOpen(true)} title="Help">?</button>
+          <button className="header-action-btn mobile-hide" onClick={exportData} title="Export backup">↓</button>
+          <button className="header-action-btn mobile-hide" onClick={() => importRef.current.click()} title="Import backup">↑</button>
+          <span className="header-divider" />
+          <button className="header-action-btn" onClick={() => supabase.auth.signOut()} title="Sign out">⏻</button>
         </div>
-        <DateNav date={date} onChange={setDate} />
+
+        <input
+          ref={importRef}
+          type="file"
+          accept=".json"
+          style={{ display: 'none' }}
+          onChange={handleImport}
+        />
       </header>
 
-      <div className="day-header">
-        <div className="day-header-inner">
-          <WeekStrip
-            currentDate={date}
-            onDateChange={setDate}
-            todayEntryCount={todayEntryCount}
-          />
-          <ProgressRing
-            groups={ringData}
-            totalDone={totalDone}
-            totalAll={totalAll}
-          />
+      {view === 'daily' && (
+        <div className="day-header">
+          <div className="day-header-inner">
+            <DateNav date={date} onChange={setDate} />
+            <div className="day-header-temporal">
+              <WeekStrip
+                currentDate={date}
+                onDateChange={setDate}
+                todayEntryCount={todayEntryCount}
+              />
+              <ProgressRing
+                groups={ringData}
+                totalDone={totalDone}
+                totalAll={totalAll}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <main className="app-main">
+
+      {view === 'heatmap' && (
+        <HeatmapView activities={activities} onDayClick={handleDayClick} />
+      )}
+
+      {view === 'daily' && (<>
 
         {/* Tag filter chips */}
         {groups.length > 1 && (
@@ -193,52 +251,89 @@ export default function App() {
           </div>
         )}
 
-        {visibleGroups.map(({ tag, items }) => (
-          <div key={tag ?? '__untagged'} className="tag-group">
-            <div className="tag-group-header">
-              <span
-                className="tag-group-label"
-                style={{ color: tagColors[tag] ?? 'var(--color-text-muted)' }}
-              >
-                {tag ?? 'Uncategorized'}
-              </span>
-              <div
-                className="tag-group-line"
-                style={{ background: tagColors[tag] ?? 'var(--color-border)' }}
+        {visibleGroups.map(({ tag, items }) => {
+          const groupContainers = containers
+            .filter(c => c.tag === tag)
+            .map(c => ({ container: c, items: items.filter(a => a.containerId === c.id) }))
+            .filter(({ items: ci }) => ci.length > 0)
+          const ungrouped = items.filter(a =>
+            !a.containerId || !containers.some(c => c.id === a.containerId && c.tag === tag)
+          )
+          const allDone = items.length > 0 &&
+            items.every(a => getCompletionStatus(a, getEntry(a.id)) === 'complete')
+
+          function renderCard(activity) {
+            const entry = getEntry(activity.id)
+            return (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                entry={entry}
+                completionStatus={getCompletionStatus(activity, entry)}
+                isDragOver={dragOverId === activity.id}
+                stats={stats[activity.id]}
+                tagColors={tagColors}
+                onFieldChange={(fieldId, value) => setFieldValue(activity.id, fieldId, value)}
+                onEdit={() => setModal(activity.id)}
+                onHistory={() => setHistoryActivity(activity)}
+                onDragStart={() => { draggingId.current = activity.id }}
+                onDragOver={e => { e.preventDefault(); if (draggingId.current !== activity.id) setDragOverId(activity.id) }}
+                onDragLeave={() => setDragOverId(null)}
+                onDrop={() => {
+                  if (draggingId.current && draggingId.current !== activity.id)
+                    reorderActivity(draggingId.current, activity.id)
+                  draggingId.current = null
+                  setDragOverId(null)
+                }}
+                onDragEnd={() => { draggingId.current = null; setDragOverId(null) }}
               />
-            </div>
+            )
+          }
 
-            {items.map(activity => {
-              const entry = getEntry(activity.id)
-              return (
-                <ActivityCard
-                  key={activity.id}
-                  activity={activity}
-                  entry={entry}
-                  completionStatus={getCompletionStatus(activity, entry)}
-                  isDragOver={dragOverId === activity.id}
-                  stats={stats[activity.id]}
-                  tagColors={tagColors}
-                  onFieldChange={(fieldId, value) => setFieldValue(activity.id, fieldId, value)}
-                  onEdit={() => setModal(activity.id)}
-                  onHistory={() => setHistoryActivity(activity)}
-                  onDragStart={() => { draggingId.current = activity.id }}
-                  onDragOver={e => { e.preventDefault(); if (draggingId.current !== activity.id) setDragOverId(activity.id) }}
-                  onDragLeave={() => setDragOverId(null)}
-                  onDrop={() => {
-                    if (draggingId.current && draggingId.current !== activity.id)
-                      reorderActivity(draggingId.current, activity.id)
-                    draggingId.current = null
-                    setDragOverId(null)
-                  }}
-                  onDragEnd={() => { draggingId.current = null; setDragOverId(null) }}
+          return (
+            <div key={tag ?? '__untagged'} className="tag-group">
+              <div className="tag-group-header">
+                <span
+                  className="tag-group-label"
+                  style={{ color: tagColors[tag] ?? 'var(--color-text-muted)' }}
+                >
+                  {tag ?? 'Uncategorized'}
+                </span>
+                <div
+                  className="tag-group-line"
+                  style={{ background: tagColors[tag] ?? 'var(--color-border)' }}
                 />
-              )
-            })}
-          </div>
-        ))}
+                {!allDone && items.length > 0 && (
+                  <button
+                    className="group-complete-btn"
+                    onClick={() => batchComplete(items.map(a => a.id))}
+                    title="Complete all in group"
+                  >✓</button>
+                )}
+              </div>
 
-        {activeActivities.length === 0 && (
+              {groupContainers.map(({ container, items: cItems }) => (
+                <ContainerBlock
+                  key={container.id}
+                  container={container}
+                  items={cItems}
+                  getEntry={getEntry}
+                  onBatchComplete={batchComplete}
+                  onDelete={deleteContainer}
+                  onRename={renameContainer}
+                  renderItem={renderCard}
+                />
+              ))}
+
+              {ungrouped.map(a => renderCard(a))}
+            </div>
+          )
+        })}
+
+        {!ready && (
+          <p className="empty-state">Loading…</p>
+        )}
+        {ready && activeActivities.length === 0 && (
           <p className="empty-state">No trackables yet. Create one to get started.</p>
         )}
 
@@ -274,12 +369,23 @@ export default function App() {
           </div>
         )}
 
+      </>)}
+
       </main>
+
+      {widgetOpen && (
+        <HeatmapWidget
+          activities={activities}
+          onClose={() => setWidgetOpen(false)}
+          onDayClick={handleDayClick}
+        />
+      )}
 
       {modal && (
         <ActivityModal
           activity={editingActivity ?? null}
           allTags={tags}
+          containers={containers}
           onSave={handleSave}
           onDelete={deleteActivity}
           onArchive={archiveActivity}

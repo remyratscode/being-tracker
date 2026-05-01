@@ -119,6 +119,12 @@ html, body {
   gap: 16px;
 }
 
+.day-header-temporal {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 /* ── Week strip ───────────────────────── */
 
 .week-strip {
@@ -1529,6 +1535,399 @@ html, body {
   align-items: center;
 }
 
+/* ── Nav bar ──────────────────────────── */
+
+.app-nav {
+  display: flex;
+  gap: 2px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.nav-tab {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 14px;
+  border-radius: 6px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.nav-tab--active {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.nav-tab:not(.nav-tab--active):hover {
+  color: var(--color-text);
+}
+
+.app-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-action-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.header-action-btn:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-muted);
+}
+
+.header-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--color-border);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+/* ── Heatmap view ─────────────────────── */
+
+.heatmap-view {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-bottom: 60px;
+}
+
+.heatmap-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hm-range-selector {
+  display: flex;
+  gap: 2px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.hm-range-selector--sm .hm-range-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.hm-range-btn {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.hm-range-btn--active {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.hm-stats {
+  display: flex;
+  gap: 20px;
+}
+
+.hm-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.hm-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.hm-stat-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.heatmap-view-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hm-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.hm-grid-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+/* ── Heatmap grid ─────────────────────── */
+
+.hm-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: fit-content;
+}
+
+.hm-month-row {
+  display: flex;
+  gap: 3px;
+}
+
+.hm-month-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.hm-body {
+  display: flex;
+  gap: 4px;
+}
+
+.hm-dow {
+  display: flex;
+  flex-direction: column;
+  width: 10px;
+}
+
+.hm-dow-label {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.hm-grid {
+  display: flex;
+  gap: 3px;
+}
+
+.hm-week {
+  display: flex;
+  flex-direction: column;
+}
+
+.hm-cell {
+  border-radius: 2px;
+  flex-shrink: 0;
+  transition: opacity 0.1s;
+}
+
+.hm-cell--has-date {
+  cursor: pointer;
+}
+
+.hm-cell--has-date:hover {
+  opacity: 0.75;
+  outline: 1px solid #ffffff22;
+}
+
+/* ── Per-trackable strip ──────────────── */
+
+.hm-trackable-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.hm-trackable-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 12px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.hm-trackable-row:last-child {
+  border-bottom: none;
+}
+
+.hm-trackable-name {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  min-width: 120px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hm-strip {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.hm-strip-cell {
+  width: 8px;
+  height: 14px;
+  border-radius: 1px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.1s;
+}
+
+.hm-strip-cell:hover {
+  opacity: 0.7;
+}
+
+/* ── Heatmap floating widget ──────────── */
+
+.hm-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 60;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  min-width: 260px;
+  min-height: 160px;
+  resize: both;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.hm-widget-handle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.hm-widget-handle:active {
+  cursor: grabbing;
+}
+
+.hm-widget-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hm-widget-close {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.hm-widget-close:hover {
+  color: var(--color-text);
+}
+
+.hm-widget-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.hm-widget-select {
+  flex: 1;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  padding: 3px 6px;
+  outline: none;
+  min-width: 0;
+}
+
+.hm-widget-select option {
+  background: var(--color-surface-raised);
+}
+
+.hm-widget-grid {
+  flex: 1;
+  overflow: auto;
+  padding: 10px;
+}
+
+.hm-mini-wrap {
+  display: flex;
+  gap: 3px;
+  width: fit-content;
+}
+
+.hm-mini-dow {
+  display: flex;
+  flex-direction: column;
+  width: 8px;
+}
+
+.hm-mini-dow-label {
+  font-size: 8px;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+}
+
 /* ── Bottle increment buttons ─────────── */
 
 .bottle-btn {
@@ -1582,4 +1981,316 @@ html, body {
 .type-btn--active {
   background: var(--color-surface-raised);
   color: var(--color-text);
+}
+
+/* ── Group ✓ all button ─────────────────────────────────── */
+
+.group-complete-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.group-complete-btn:hover {
+  border-color: var(--color-on);
+  color: var(--color-on);
+}
+
+/* ── Container block ────────────────────────────────────── */
+
+.container-block {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.container-block-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--color-surface);
+}
+
+.container-collapse-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+
+.container-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.container-name:hover {
+  color: var(--color-text);
+}
+
+.container-name-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+}
+
+.container-count {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.container-complete-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.container-complete-btn:hover {
+  border-color: var(--color-on);
+  color: var(--color-on);
+}
+
+.container-delete-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.container-delete-btn:hover {
+  opacity: 1;
+  color: #f43f5e;
+}
+
+.container-block-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.container-block-items > * {
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+}
+
+/* ── Container assignment in ActivityModal ─────────────── */
+
+.container-select-row,
+.container-create-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.container-select-row .form-input,
+.container-create-row .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn--xs {
+  font-size: 11px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+/* ── Auth screen ────────────────────────────────────────── */
+
+.auth-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.auth-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.auth-subtitle {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.auth-error {
+  font-size: 12px;
+  color: #f43f5e;
+  text-align: center;
+}
+
+.auth-mode-switch {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+  padding: 4px;
+  margin-top: 4px;
+  transition: color 0.15s;
+}
+
+.auth-mode-switch:hover {
+  color: var(--color-text);
+}
+
+.form-label-hint {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 4px;
+}
+
+/* ── Safe-area & PWA ──────────────────── */
+
+.app-header {
+  padding-top: env(safe-area-inset-top);
+  height: calc(var(--header-height) + env(safe-area-inset-top));
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+}
+
+.day-header {
+  top: calc(var(--header-height) + env(safe-area-inset-top));
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+}
+
+.app-main {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+/* ── Mobile responsive ────────────────── */
+
+.mobile-hide { display: flex; }
+
+@media (max-width: 640px) {
+  .mobile-hide { display: none !important; }
+
+  /* Bigger touch targets */
+  .header-action-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .date-nav-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .date-nav-label {
+    min-width: 140px;
+    font-size: 13px;
+  }
+
+  /* Day header stacks on mobile */
+  .day-header-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .date-nav {
+    justify-content: center;
+  }
+
+  .day-header-temporal {
+    justify-content: space-between;
+  }
+
+  /* Touch-friendly fields */
+  .field {
+    min-height: 48px;
+    padding: 12px 0;
+  }
+
+  /* Card action buttons always visible on mobile (no hover) */
+  .card-icon-btn {
+    opacity: 0.7;
+    padding: 4px 6px;
+  }
+
+  .week-day {
+    padding: 6px 8px;
+    min-width: 36px;
+  }
 }

@@ -65,3 +65,20 @@ export function saveEntries(date, entries) {
     localStorage.setItem(`lifelog:entries:${date}`, JSON.stringify(entries))
   } catch {}
 }
+
+const CONTAINERS_KEY = 'lifelog:containers'
+
+export function loadContainers() {
+  try {
+    const raw = localStorage.getItem(CONTAINERS_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+export function saveContainers(containers) {
+  try {
+    localStorage.setItem(CONTAINERS_KEY, JSON.stringify(containers))
+  } catch {}
+}

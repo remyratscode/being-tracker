@@ -17,7 +17,7 @@ function newField() {
   return { id: crypto.randomUUID(), label: '', type: 'toggle', config: {} }
 }
 
-export default function ActivityModal({ activity, allTags, onSave, onDelete, onArchive, onClose }) {
+export default function ActivityModal({ activity, allTags, containers, onSave, onDelete, onArchive, onClose }) {
   const isEdit = !!activity
   const nameRef = useRef(null)
 
@@ -31,6 +31,9 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onA
   const [tagFocused, setTagFocused] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState('')
+  const [containerId, setContainerId] = useState(activity?.containerId ?? '')
+  const [newContainerName, setNewContainerName] = useState('')
+  const [creatingContainer, setCreatingContainer] = useState(false)
 
   useEffect(() => { nameRef.current?.focus() }, [])
 
@@ -98,17 +101,31 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onA
     setFields(prev => prev.filter(f => f.id !== id))
   }
 
+  const firstTag = tags[0] ?? null
+  const groupContainers = (containers ?? []).filter(c => c.tag === firstTag)
+
   // Save
   function handleSave() {
     if (!name.trim()) return setError('Name is required')
     if (!fields.length) return setError('Add at least one field')
     if (fields.some(f => !f.label.trim())) return setError('All fields need a label')
 
+    let resolvedContainerId = containerId
+    let newContainer = null
+
+    if (creatingContainer && newContainerName.trim() && firstTag) {
+      const newId = crypto.randomUUID()
+      newContainer = { id: newId, name: newContainerName.trim(), tag: firstTag }
+      resolvedContainerId = newId
+    }
+
     onSave({
       id: activity?.id ?? crypto.randomUUID(),
       name: name.trim(),
       type,
       tags,
+      containerId: resolvedContainerId || null,
+      _newContainer: newContainer,
       fields: fields.map(f => ({
         id: f.id,
         label: f.label.trim(),
@@ -203,6 +220,43 @@ export default function ActivityModal({ activity, allTags, onSave, onDelete, onA
               </div>
             )}
           </div>
+
+          {/* Container */}
+          {firstTag && (
+            <div className="form-group">
+              <label className="form-label">Container <span className="form-label-hint">(optional)</span></label>
+              {creatingContainer ? (
+                <div className="container-create-row">
+                  <input
+                    className="form-input form-input--sm"
+                    autoFocus
+                    placeholder="Container name..."
+                    value={newContainerName}
+                    onChange={e => setNewContainerName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Escape') { setCreatingContainer(false); setNewContainerName('') } }}
+                  />
+                  <button className="btn btn--ghost btn--xs" onClick={() => { setCreatingContainer(false); setNewContainerName('') }}>Cancel</button>
+                </div>
+              ) : (
+                <div className="container-select-row">
+                  <select
+                    className="form-input form-select"
+                    value={containerId}
+                    onChange={e => setContainerId(e.target.value)}
+                  >
+                    <option value="">No container</option>
+                    {groupContainers.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    className="btn btn--ghost btn--xs"
+                    onClick={() => { setCreatingContainer(true); setContainerId('') }}
+                  >+ New</button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Fields */}
           <div className="form-group">
